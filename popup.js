@@ -1,68 +1,27 @@
-const recordBtn = document.getElementById('recordBtn');
-const action = btn.dataset.action;
-if (action === 'select') {
-selectedMacroId = id;
-highlightSelected();
-} else if (action === 'rename') {
-const newNm = prompt('اكتب اسم جديد للماكرو:');
-if (!newNm) return;
-chrome.storage.local.get(['macros'], res => {
-const macros = res.macros || {};
-if (!macros[id]) return alert('غير موجود');
-macros[id].name = newNm;
-chrome.storage.local.set({macros}, () => loadList());
-});
-} else if (action === 'delete') {
-if (!confirm('تحذف هذا الماكرو؟')) return;
-chrome.storage.local.get(['macros'], res => {
-const macros = res.macros || {};
-delete macros[id];
-chrome.storage.local.set({macros}, () => {
-if (selectedMacroId === id) selectedMacroId = null;
-loadList();
-});
-});
-}
+document.getElementById("startRecord").addEventListener("click", () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "startRecord" });
+        console.log("▶ startRecord sent");
+    });
 });
 
-
-saveAsBtn.addEventListener('click', () => {
-const nm = (newName.value || '').trim();
-if (!nm) return alert('اكتب اسم للحفظ');
-// request last exported macro from content script
-chrome.runtime.sendMessage({action: 'requestLastExport'}, (resp) => {
-if (!resp || !resp.macro) return alert('لا يوجد تسجيل حديث');
-const id = Date.now().toString(36);
-chrome.storage.local.get(['macros'], res => {
-const macros = res.macros || {};
-const m = resp.macro;
-m.name = nm;
-macros[id] = m;
-chrome.storage.local.set({macros}, () => { newName.value=''; loadList(); alert('تم الحفظ'); });
-});
-});
+document.getElementById("stopRecord").addEventListener("click", () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "stopRecord" });
+        console.log("⏹ stopRecord sent");
+    });
 });
 
-
-function highlightSelected() {
-Array.from(macroList.querySelectorAll('.macro')).forEach(div => {
-div.style.background = div.querySelector('[data-action="select"]')?.dataset.id === selectedMacroId ? '#eef' : 'transparent';
+document.getElementById("playMacro").addEventListener("click", () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "playMacro" });
+        console.log("🎬 playMacro sent");
+    });
 });
-}
 
-
-function loadList(){
-chrome.storage.local.get(['macros'], res => {
-renderList(res.macros || {});
-});
-}
-
-
-// initial load
-loadList();
-
-
-// listen for external updates
-chrome.runtime.onMessage.addListener((msg) => {
-if (msg.action === 'updateList') loadList();
+document.getElementById("clearMacro").addEventListener("click", () => {
+    chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
+        chrome.tabs.sendMessage(tabs[0].id, { action: "clearMacro" });
+        console.log("🧹 clearMacro sent");
+    });
 });
