@@ -1,0 +1,65 @@
+<!doctype html>
+<html>
+<head>
+<meta charset="utf-8" />
+<title>Macro Studio</title>
+<style>
+body{font-family:Segoe UI,Arial; width:360px; padding:12px;}
+h2{margin:4px 0 10px 0;}
+.controls button{width:100%; padding:10px; margin:6px 0; font-size:15px;}
+.list{max-height:220px; overflow:auto; border:1px solid #ddd; padding:8px; border-radius:6px;}
+.macro{display:flex; align-items:center; justify-content:space-between; padding:8px; border-bottom:1px solid #f0f0f0;}
+.macro:last-child{border-bottom:none;}
+.macro .meta{flex:1; margin-right:8px;}
+.row{display:flex; gap:6px;}
+select, input[type="text"]{padding:6px; width:100%; box-sizing:border-box;}
+.small{width:48px;}
+.footer{margin-top:8px; font-size:12px; color:#666;}
+.badge{font-size:11px; padding:4px 6px; background:#f3f3f3; border-radius:6px;}
+button.icon{padding:6px 8px; font-size:13px;}
+</style>
+</head>
+<body>
+<h2>Macro Studio — Demo</h2>
+<div class="controls">
+<button id="recordBtn">🔴 Start Recording</button>
+<button id="stopBtn" disabled>⏹️ Stop</button>
+<button id="playBtn">▶️ Play Selected</button>
+</div>
+
+
+<div style="margin-top:12px;">
+<label>Speed:
+<select id="speed">
+<option value="0.5">بطيء</option>
+<option value="1" selected>طبيعي</option>
+<option value="2">سريع</option>
+</select>
+</label>
+<label style="margin-left:12px;">Loop:
+<select id="loop">
+<option value="0">لا</option>
+<option value="1">نعم</option>
+</select>
+</label>
+</div>
+
+
+<h3 style="margin-top:12px">Saved Macros</h3>
+<div class="list" id="macroList">Loading…</div>
+
+
+<div style="margin-top:8px;" class="row">
+<input id="newName" placeholder="اسم جديد للماكرو أو اسم جديد" />
+<button id="saveAsBtn" class="icon">💾 Save</button>
+</div>
+
+
+<div class="footer">
+<div>ملاحظة: هذا إصدار تعليمي — يعمل على صفحات تجريبية ومحلية فقط. لا تستخدمه لغش.</div>
+</div>
+
+
+<script src="popup.js"></script>
+</body>
+</html>
