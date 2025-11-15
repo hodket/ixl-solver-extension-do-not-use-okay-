@@ -1,67 +1,93 @@
-// Content script: records clicks, key presses, scroll, and can replay.
-// It stores the last recorded macro and can export it to popup for saving.
-(function(){
-let recording = false;
-let events = [];
-let startTime = 0;
-let lastExport = null;
+console.log("content.js LOADED!!!");
 
+// ==========================
+// SIMPLE MACRO RECORDER
+// ==========================
 
-// overlay fake cursor for replay
-let fakeCursor = null;
-function ensureFakeCursor(){
-if (fakeCursor) return;
-fakeCursor = document.createElement('div');
-fakeCursor.style.position='fixed';
-fakeCursor.style.width='14px';
-fakeCursor.style.height='14px';
-fakeCursor.style.background='red';
-fakeCursor.style.borderRadius='50%';
-fakeCursor.style.zIndex = 999999999;
-fakeCursor.style.pointerEvents = 'none';
-fakeCursor.style.transform = 'translate(-50%,-50%)';
-fakeCursor.style.display='none';
-document.documentElement.appendChild(fakeCursor);
+// Stores recorded events
+let recordedEvents = [];
+let isRecording = false;
+
+// Listen for messages from popup.js
+chrome.runtime.onMessage.addListener((msg) => {
+    if (msg.action === "startRecord") {
+        recordedEvents = [];
+        isRecording = true;
+        console.log("📌 Recording Started...");
+    }
+
+    if (msg.action === "stopRecord") {
+        isRecording = false;
+        console.log("🛑 Recording Stopped");
+    }
+
+    if (msg.action === "playMacro") {
+        console.log("▶ Playing Macro...", recordedEvents);
+        playMacro();
+    }
+
+    if (msg.action === "clearMacro") {
+        recordedEvents = [];
+        console.log("🧹 Macro Cleared");
+    }
+});
+
+// Capture mouse clicks
+document.addEventListener("click", (e) => {
+    if (!isRecording) return;
+
+    recordedEvents.push({
+        type: "click",
+        x: e.clientX,
+        y: e.clientY
+    });
+
+    console.log("🖱️ Click saved:", e.clientX, e.clientY);
+});
+
+// Capture keyboard keys
+document.addEventListener("keydown", (e) => {
+    if (!isRecording) return;
+
+    recordedEvents.push({
+        type: "key",
+        key: e.key
+    });
+
+    console.log("⌨️ Key saved:", e.key);
+});
+
+// ==========================
+// PLAYBACK FUNCTION
+// ==========================
+function playMacro() {
+    let i = 0;
+
+    function next() {
+        if (i >= recordedEvents.length) {
+            console.log("✅ Finished Playback");
+            return;
+        }
+
+        const ev = recordedEvents[i];
+
+        if (ev.type === "click") {
+            console.log("💥 Replaying click at", ev.x, ev.y);
+
+            const elem = document.elementFromPoint(ev.x, ev.y);
+            if (elem) elem.click();
+        }
+
+        if (ev.type === "key") {
+            console.log("⌨️ Replaying key:", ev.key);
+
+            const keyboardEvent = new KeyboardEvent("keydown", { key: ev.key });
+            document.activeElement.dispatchEvent(keyboardEvent);
+        }
+
+        i++;
+        setTimeout(next, 200); // delay between actions
+    }
+
+    next();
 }
-
-
-function recordEvent(e){
-const t = Date.now() - startTime;
-const base = {t};
-if (e.type === 'click'){
-events.push(Object.assign(base,{type:'click', x:e.clientX, y:e.clientY, button: e.button}));
-} else if (e.type === 'keydown' || e.type === 'keyup'){
-let key = e.key;
-events.push(Object.assign(base,{type: e.type, key}));
-} else if (e.type === 'scroll'){
-events.push(Object.assign(base,{type:'scroll', x: window.scrollX, y: window.scrollY}));
-} else if (e.type === 'mousemove'){
-// capture but keep sparse: only record if enough time since last
-const last = events.length ? events[events.length-1] : null;
-if (!last || (t - last.t) > 80){
-events.push(Object.assign(base,{type:'move', x:e.clientX, y:e.clientY}));
-}
-}
-}
-
-
-function startRecording(){
-if (recording) return;
-recording = true;
-events = [];
-startTime = Date.now();
-window.addEventListener('click', recordEvent, true);
-window.addEventListener('keydown', recordEvent, true);
-window.addEventListener('keyup', recordEvent, true);
-window.addEventListener('scroll', recordEvent, true);
-window.addEventListener('mousemove', recordEvent, true);
-console.log('recording started');
-}
-
-
-function stopRecording(){
-if (!recording) return;
-recording = false;
-window.removeEventListener('click', recordEvent, true);
-window.removeEventListener('keydown', recordEvent, true);
-window.removeEventListener('keyup', recordEven
